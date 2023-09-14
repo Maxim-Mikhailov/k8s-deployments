@@ -1,0 +1,22 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: grafana
+  namespace: <your-namespace>
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: grafana.<your-host>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 80
+status:
+  loadBalancer:
+    ingress:
+      - ip: <ip>

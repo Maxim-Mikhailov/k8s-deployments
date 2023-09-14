@@ -1,0 +1,91 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: grafana
+  namespace: your-namespace
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: grafana
+    spec:
+      volumes:
+        - name: grafana-storage
+          emptyDir: {}
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+            defaultMode: 420
+        - name: grafana-dashboard-definitions
+          configMap:
+            name: grafana-dashboard-definitions
+            defaultMode: 420
+        - name: grafana-config
+          configMap:
+            name: grafana-config
+            items:
+              - key: grafana.ini
+                path: grafana.ini
+                mode: 420
+            defaultMode: 420
+        - name: grana-ldap-config
+          configMap:
+            name: grana-ldap-config
+            items:
+              - key: ldap.toml
+                path: ldap.toml
+                mode: 420
+            defaultMode: 420
+      containers:
+        - resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+          terminationMessagePath: /dev/termination-log
+          name: grafana
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - name: grafana
+              containerPort: 3000
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: grafana-config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+            - name: grana-ldap-config
+              mountPath: /etc/grafana/ldap.toml
+              subPath: ldap.toml
+          terminationMessagePolicy: File
+          image: >-
+            your-registry/grafana:9.3.6
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

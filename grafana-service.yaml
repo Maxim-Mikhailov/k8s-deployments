@@ -1,0 +1,23 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana
+  namespace: <your-namespace>
+spec:
+  clusterIP: <ip>
+  ipFamilies:
+    - IPv4
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  internalTrafficPolicy: Cluster
+  clusterIPs:
+    - <ip>
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    app: grafana
+status:
+  loadBalancer: {}
